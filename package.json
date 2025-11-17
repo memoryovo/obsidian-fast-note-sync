@@ -1,7 +1,7 @@
 {
   "name": "Fast Note Sync",
-  "version": "0.6.9",
-  "description": "can be privately deployed, focusing on providing Obsidian users with an undisturbed, silky smooth, multi-end real-time synchronization note synchronization function, supporting platforms such as Mac, Windows, Android, iOS, and offering multi-language support.",
+  "version": "0.6.10",
+  "description": "Privately deployable real-time multi-device note synchronization, supporting desktop and mobile devices.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
