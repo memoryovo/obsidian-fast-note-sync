@@ -111,25 +111,21 @@ export async function overrideRemoteAllFilesImpl(plugin: FastSync): Promise<void
     new Notice("上一次的全部笔记同步尚未完成，请耐心等待或检查服务端状态")
     return
   }
-  plugin.websocket.isSyncAllFilesInProgress = true
+
+  const localNotes: NoteSyncCheck[] = []
   const files = plugin.app.vault.getMarkdownFiles()
   for (const file of files) {
     const content: string = await plugin.app.vault.cachedRead(file)
-    const data = {
-      vault: plugin.settings.vault,
-      ctime: file.stat.ctime,
-      mtime: file.stat.mtime,
+    localNotes.push({
       path: file.path,
       pathHash: hashContent(file.path),
-      content: content,
       contentHash: hashContent(content),
-    }
-    plugin.websocket.MsgSend("NoteModifyOverride", data, "json")
+      mtime: file.stat.mtime,
+    })
   }
-  plugin.websocket.isSyncAllFilesInProgress = false
   plugin.settings.lastSyncTime = 0
   await plugin.saveData(plugin.settings)
-  NoteSync(plugin)
+  NoteSync(plugin, localNotes)
 }
 
 // 同步包装：供 addCommand 使用，返回 void（命令回调类型安全）
@@ -156,25 +152,20 @@ export async function syncAllFilesImpl(plugin: FastSync): Promise<void> {
     dump("Loop, waiting...")
     await sleep(2000) // 每隔两秒重试一次
   }
+  const localNotes: NoteSyncCheck[] = []
   const files = await plugin.app.vault.getMarkdownFiles()
   for (const file of files) {
     const content: string = await plugin.app.vault.cachedRead(file)
-    const data = {
-      vault: plugin.settings.vault,
-      ctime: file.stat.ctime,
-      mtime: file.stat.mtime,
+    localNotes.push({
       path: file.path,
       pathHash: hashContent(file.path),
-      content: content,
       contentHash: hashContent(content),
-    }
-    dump(`Notesync node send`, data.path, data.contentHash, data.mtime, data.pathHash)
-    await plugin.websocket.MsgSend("NoteModify", data, "json", true)
+      mtime: file.stat.mtime,
+    })
   }
-  plugin.websocket.isSyncAllFilesInProgress = false
   plugin.settings.lastSyncTime = 0
   await plugin.saveData(plugin.settings)
-  await NoteSync(plugin)
+  NoteSync(plugin, localNotes)
 }
 
 // 同步包装：供 addCommand 使用，返回 void（命令回调类型安全）
@@ -182,7 +173,14 @@ export const SyncAllFiles = (plugin: FastSync): void => {
   void syncAllFilesImpl(plugin)
 }
 
-export const NoteSync = async function (plugin: FastSync) {
+interface NoteSyncCheck {
+  path: string
+  pathHash: string
+  contentHash: string
+  mtime: number
+}
+
+export const NoteSync = async function (plugin: FastSync, notes: NoteSyncCheck[] = []) {
   while (plugin.websocket.isSyncAllFilesInProgress) {
     new Notice("上一次的全部笔记同步尚未完成，请耐心等待或检查服务端状态")
     return
@@ -191,6 +189,7 @@ export const NoteSync = async function (plugin: FastSync) {
   const data = {
     vault: plugin.settings.vault,
     lastTime: Number(plugin.settings.lastSyncTime),
+    notes: notes
   }
   plugin.websocket.MsgSend("NoteSync", data, "json")
   dump("Notesync", data)
@@ -213,6 +212,12 @@ interface ReceiveData {
   lastTime: number
 }
 
+interface ReceiveCheckData {
+  path: string
+  ctime: number
+  mtime: number
+}
+
 // ReceiveNoteModify 接收文件修改
 export const ReceiveNoteSyncModify = async function (data: ReceiveData, plugin: FastSync) {
   if (plugin.SyncSkipFiles[data.path] && plugin.SyncSkipFiles[data.path] == data.contentHash) {
@@ -222,16 +227,13 @@ export const ReceiveNoteSyncModify = async function (data: ReceiveData, plugin: 
 
   const file = plugin.app.vault.getFileByPath(data.path)
   if (file) {
-    if ( data.contentHash != hashContent(await plugin.app.vault.cachedRead(file))) {
+    if (data.contentHash != hashContent(await plugin.app.vault.cachedRead(file))) {
       plugin.SyncSkipFiles[data.path] = data.contentHash
       await plugin.app.vault.modify(file, data.content, { ctime: data.ctime, mtime: data.mtime })
     }
   } else {
     const folder = data.path.split("/").slice(0, -1).join("/")
     if (folder != "") {
-      // const dirExists = await plugin.app.vault.adapter.exists(folder)
-      // if (!dirExists) await plugin.app.vault.createFolder(folder)
-
       const dirExists = await plugin.app.vault.getFolderByPath(folder)
       if (dirExists == null) await plugin.app.vault.createFolder(folder)
     }
@@ -240,6 +242,27 @@ export const ReceiveNoteSyncModify = async function (data: ReceiveData, plugin: 
   }
 }
 
+// ReceiveNoteSyncNeed 接收处理需要上传需求
+export const ReceiveNoteSyncNeedPush = async function (data: ReceiveCheckData, plugin: FastSync) {
+  dump(`Receive note modify:`, data.path, data.mtime)
+  const file = plugin.app.vault.getFileByPath(data.path)
+  if (file) {
+    NoteModify(file, plugin)
+  }
+}
+
+// ReceiveNoteSyncNeedMtime 接收需求修改mtime
+export const ReceiveNoteSyncMtime = async function (data: ReceiveCheckData, plugin: FastSync) {
+  dump(`Receive note sync mtime:`, data.path, data.mtime)
+
+  const file = plugin.app.vault.getFileByPath(data.path)
+  if (file) {
+    const content: string = await plugin.app.vault.cachedRead(file)
+    await plugin.app.vault.modify(file, content, { ctime: data.ctime, mtime: data.mtime })
+  }
+}
+
+// 接收文件删除任务
 export const ReceiveNoteSyncDelete = async function (data: ReceiveData, plugin: FastSync) {
   dump(`Receive note delete:`, data.action, data.path, data.mtime, data.pathHash)
   const file = plugin.app.vault.getFileByPath(data.path)
@@ -250,6 +273,7 @@ export const ReceiveNoteSyncDelete = async function (data: ReceiveData, plugin: 
   }
 }
 
+//接收同步结束消息
 export const ReceiveNoteSyncEnd = async function (data: ReceiveData, plugin: FastSync) {
   dump(`Receive note end:`, data.vault, data, data.lastTime)
   plugin.settings.lastSyncTime = data.lastTime
@@ -261,6 +285,8 @@ type ReceiveSyncMethod = (data: unknown, plugin: FastSync) => void
 
 export const syncReceiveMethodHandlers: Map<string, ReceiveSyncMethod> = new Map([
   ["NoteSyncModify", ReceiveNoteSyncModify],
+  ["NoteSyncNeedPush", ReceiveNoteSyncNeedPush],
+  ["NoteSyncMtime", ReceiveNoteSyncMtime],
   ["NoteSyncDelete", ReceiveNoteSyncDelete],
   ["NoteSyncEnd", ReceiveNoteSyncEnd],
 ])
