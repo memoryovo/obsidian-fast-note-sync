@@ -36,7 +36,7 @@ import { moment } from "obsidian";
  * Locale object type.
  * 假设每个 locale 文件都是键 => 字符串（常见情形），使用更严格的类型。
  */
-export interface LangMap extends Record<string, string> { }
+export type LangMap = Record<string, string>;
 
 export const localeMap: { [k: string]: Partial<typeof en> } = {
     ar,
@@ -104,7 +104,7 @@ function interpolate(str: string, params: Record<string, unknown>): string {
     if (!str || typeof str !== "string") return String(str ?? "");
     return str.replace(/\$\{([^}]+)\}/g, (_match, expression) => {
         const path = expression.trim();
-        if (!/^[A-Za-z0-9_\.\[\]'"\s-]+$/.test(path)) {
+        if (!/^[A-Za-z0-9_.[\]'"\s-]+$/.test(path)) {
             return "";
         }
         const val = getValueFromPath(params, path);
@@ -127,7 +127,7 @@ export function $(
     params?: Record<string, unknown>
 ): string {
     // str 的类型现在必为 string，安全用于索引
-    const key = str as string;
+    const key = str;
     const fallback = en[key];
     const result = (locale && (locale[key] as string)) ?? fallback ?? key;
 

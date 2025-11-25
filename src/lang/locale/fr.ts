@@ -3,7 +3,7 @@ import type { LangMap } from "../lang";
 
 
 const fr: Partial<LangMap> = {
-  "FastSync": "Concentré sur la fourniture d'un plugin de synchronisation de notes sans distraction, extrêmement fluide et avec synchronisation en temps réel sur plusieurs appareils, compatible avec les plateformes Mac, Windows, Android, iOS et offrant une prise en charge multilingue.",
+  "Fast sync": "Concentré sur la fourniture d'un plugin de synchronisation de notes sans distraction, extrêmement fluide et avec synchronisation en temps réel sur plusieurs appareils, compatible avec les plateformes Mac, Windows, Android, iOS et offrant une prise en charge multilingue.",
   "同步全部笔记(覆盖远端)": "Synchroniser toutes les notes (écraser la distante)",
   "同步全部笔记": "Synchroniser toutes les notes",
   "远端": "À distance",
@@ -20,7 +20,7 @@ const fr: Partial<LangMap> = {
   "启用同步": "Activer la synchronisation",
   "关闭后您的笔记将不做任何同步": "Une fois fermé, vos notes ne seront plus synchronisées.",
   "远端服务地址": "Adresse du service distant",
-  "选择一个 Fast-Sync-Service 服务地址": "Choisissez une adresse de service Fast-Sync-Service",
+  "选择一个 Fast note sync service 服务地址": "Choisissez une adresse de service Fast note sync service",
   "输入您的 Image API Gateway 地址": "Entrez l'adresse de votre passerelle API d'image",
   "远端服务令牌": "Jeton de service distant",
   "用于远端服务的访问授权令牌": "Jeton d'autorisation d'accès pour services distants",

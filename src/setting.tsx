@@ -65,7 +65,7 @@ export class SettingTab extends PluginSettingTab {
 
     set.empty()
 
-    // new Setting(set).setName("Fast Note Sync").setDesc($("FastSync")).setHeading()
+    // new Setting(set).setName("Fast Note Sync").setDesc($("Fast sync")).setHeading()
 
     new Setting(set)
       .setName($("启用同步"))
@@ -94,7 +94,7 @@ export class SettingTab extends PluginSettingTab {
 
     new Setting(set)
       .setName($("远端服务地址"))
-      .setDesc($("选择一个 Fast-Sync-Service 服务地址"))
+      .setDesc($("选择一个 Fast note sync service 服务地址"))
       .addText((text) =>
         text
           .setPlaceholder($("输入您的 Image API Gateway 地址"))

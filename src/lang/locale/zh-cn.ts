@@ -3,7 +3,7 @@ import type { LangMap } from "../lang";
 
 
 const zh_cn: Partial<LangMap> = {
-  "FastSync": "可私有化部署，专注为用户提供无打扰、丝般顺滑、多端实时同步的笔记同步插件，支持 Mac、Windows、Android、iOS 等平台，并提供多语言支持。",
+  "Fast sync": "可私有化部署，专注为用户提供无打扰、丝般顺滑、多端实时同步的笔记同步插件，支持 Mac、Windows、Android、iOS 等平台，并提供多语言支持。",
   "同步全部笔记(覆盖远端)": "同步全部笔记(覆盖远端)",
   "同步全部笔记": "同步全部笔记",
   "远端": "远端",
@@ -20,7 +20,7 @@ const zh_cn: Partial<LangMap> = {
   "启用同步": "启用同步",
   "关闭后您的笔记将不做任何同步": "关闭后您的笔记将不做任何同步",
   "远端服务地址": "远端服务地址",
-  "选择一个 Fast-Sync-Service 服务地址": "选择一个 Fast-Sync-Service 服务地址",
+  "选择一个 Fast note sync service 服务地址": "选择一个 Fast note sync service 服务地址",
   "输入您的 Image API Gateway 地址": "输入您的 Image API Gateway 地址",
   "远端服务令牌": "远端服务令牌",
   "用于远端服务的访问授权令牌": "用于远端服务的访问授权令牌",
