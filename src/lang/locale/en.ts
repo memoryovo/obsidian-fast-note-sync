@@ -3,7 +3,7 @@ import type { LangMap } from "../lang";
 
 
 const en: Partial<LangMap> = {
-  "Fast sync": "Focus on providing users with a non-intrusive, silky smooth, multi-platform real-time synchronized note-taking plugin, supporting Mac, Windows, Android, iOS, and offering multi-language support.",
+  "Fast sync": "Focus on providing users with a non-intrusive, silky smooth, multi-platform real-time synchronized note-taking plugin, supporting mac, windows, android, ios, and offering multi-language support.",
   "同步全部笔记(覆盖远端)": "Sync all notes (overwrite remote)",
   "同步全部笔记": "Sync all notes",
   "远端": "Remote",
@@ -20,8 +20,8 @@ const en: Partial<LangMap> = {
   "启用同步": "Enable synchronization",
   "关闭后您的笔记将不做任何同步": "After closing, your notes will not be synced.",
   "远端服务地址": "Remote service address",
-  "选择一个 Fast note sync service 服务地址": "Choose an Fast note sync service address",
-  "输入您的 Image API Gateway 地址": "Enter your Image API Gateway address",
+  "选择一个 Fast note sync service 服务地址": "Choose an fast note sync service address",
+  "输入您的 Fast note sync service 服务地址": "Enter your fast note sync service address",
   "远端服务令牌": "Remote service token",
   "用于远端服务的访问授权令牌": "Access authorization token for remote services",
   "输入您的 API 访问令牌": "Enter your API access token",
@@ -29,7 +29,7 @@ const en: Partial<LangMap> = {
   "支持": "Support",
   "捐赠": "Donation",
   "如果您喜欢这个插件，请考虑捐赠以支持继续开发。": "If you like this plugin, please consider donating to support continued development.",
-  "Buy Me a Coffee at ko-fi.com": "Buy Me a Coffee at ko-fi.com",
+  "Buy me a coffee at ko-fi.com": "Buy me a coffee at ko-fi.com",
   "复制 Debug 信息": "Copy debug information",
   "将调试信息复制到剪贴板, 可能包含敏感信!": "Copy debug information to the clipboard, may contain sensitive information!",
   "通过快捷键打开控制台，你可以看到这个插件和其他插件的日志": "By using the shortcut key to open the console, you can see the logs of this plugin and other plugins.",

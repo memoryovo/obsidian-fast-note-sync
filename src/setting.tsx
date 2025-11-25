@@ -97,7 +97,7 @@ export class SettingTab extends PluginSettingTab {
       .setDesc($("选择一个 Fast note sync service 服务地址"))
       .addText((text) =>
         text
-          .setPlaceholder($("输入您的 Image API Gateway 地址"))
+          .setPlaceholder($("输入您的 Fast note sync service 服务地址"))
           .setValue(this.plugin.settings.api)
           .onChange(async (value) => {
             if (value != this.plugin.settings.api) {
@@ -147,7 +147,7 @@ export class SettingTab extends PluginSettingTab {
       .setClass("fast-note-sync-settings-support")
       .settingEl.createEl("a", { href: "https://ko-fi.com/haierkeys" })
       .createEl("img", {
-        attr: { src: KofiImage, height: "36", border: "0", alt: "Buy Me a Coffee at ko-fi.com", class: "ko-fi-logo" },
+        attr: { src: KofiImage, height: "36", border: "0", alt: "Buy me a coffee at ko-fi.com", class: "ko-fi-logo" },
       })
 
     const debugDiv = set.createDiv()
