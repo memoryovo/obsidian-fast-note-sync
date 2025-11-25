@@ -68,7 +68,7 @@ export const NoteContentModify = async function (file: TAbstractFile, content: s
   }
 
   const contentHash = hashContent(content)
-  if (plugin.SyncSkipFiles[file.path] && plugin.SyncSkipFiles[file.path] == contentHash) {
+  if (plugin.syncSkipFiles[file.path] && plugin.syncSkipFiles[file.path] == contentHash) {
     return
   }
 
