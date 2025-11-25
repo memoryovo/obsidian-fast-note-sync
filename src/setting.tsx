@@ -92,7 +92,7 @@ export class SettingTab extends PluginSettingTab {
     this.root = createRoot(apiSet)
     this.root.render(<SettingsView plugin={this.plugin} />)
 
-    const api = new Setting(set)
+    new Setting(set)
       .setName($("远端服务地址"))
       .setDesc($("选择一个 Fast-Sync-Service 服务地址"))
       .addText((text) =>
@@ -108,7 +108,7 @@ export class SettingTab extends PluginSettingTab {
           })
       )
 
-    const apiToken = new Setting(set)
+    new Setting(set)
       .setName($("远端服务令牌"))
       .setDesc($("用于远端服务的访问授权令牌"))
       .addText((text) =>
@@ -141,7 +141,7 @@ export class SettingTab extends PluginSettingTab {
       .setName("| " + $("支持"))
       .setHeading()
       .setClass("fast-note-sync-settings-tag")
-    let y = new Setting(set)
+    new Setting(set)
       .setName($("捐赠"))
       .setDesc($("如果您喜欢这个插件，请考虑捐赠以支持继续开发。"))
       .setClass("fast-note-sync-settings-support")

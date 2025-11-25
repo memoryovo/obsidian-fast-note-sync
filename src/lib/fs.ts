@@ -1,6 +1,6 @@
 import { TFile, TAbstractFile, Notice } from "obsidian";
 
-import { timestampToDate, hashContent, stringToDate, dump } from "./helps";
+import { hashContent, dump } from "./helps";
 import FastSync from "../main";
 
 

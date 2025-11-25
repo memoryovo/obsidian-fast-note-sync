@@ -1,5 +1,4 @@
 import { dump } from "src/lib/helps";
-import { useState } from "react";
 import FastSync from "src/main";
 
 import { $ } from "../lang/lang";
@@ -61,6 +60,7 @@ async function getClipboardContent(plugin: FastSync): Promise<void> {
     clipboardReadTipTipSave($("未检测到配置信息!"))
     return
   } catch (err) {
+    dump(err)
     clipboardReadTipTipSave($("未检测到配置信息!"))
     return
   }

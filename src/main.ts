@@ -3,7 +3,6 @@ import { Plugin, setIcon } from "obsidian";
 import { NoteModify, NoteDelete, NoteRename, OverrideRemoteAllFiles, SyncAllFiles } from "./lib/fs";
 import { SettingTab, PluginSettings, DEFAULT_SETTINGS } from "./setting";
 import { WebSocketClient } from "./lib/websocket";
-import { isWsUrl } from "./lib/helps";
 import { $ } from "./lang/lang";
 
 
