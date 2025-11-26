@@ -8,18 +8,22 @@ import FastSync from "../main";
  消息推送操作方法 Message Push Operation Method
  */
 
-export const NoteModify = async function (file: TAbstractFile, plugin: FastSync) {
+export const NoteModify = async function (file: TAbstractFile, plugin: FastSync, eventEnter: boolean = false) {
   if (!file.path.endsWith(".md")) return
+  if (!plugin.isWatchEnabled && eventEnter) {
+    return
+  }
+  if (plugin.ignoredFiles.has(file.path) && eventEnter) {
+    return
+  }
   if (!(file instanceof TFile)) {
     return
   }
+
+  plugin.addIgnoredFile(file.path)
+
   const content: string = await plugin.app.vault.cachedRead(file)
   const contentHash = hashContent(content)
-
-  if (plugin.syncSkipFiles[file.path] && plugin.syncSkipFiles[file.path] == contentHash) {
-    dump(`Note modify skip`, file.path, contentHash)
-    return
-  }
 
   const data = {
     vault: plugin.settings.vault,
@@ -31,49 +35,50 @@ export const NoteModify = async function (file: TAbstractFile, plugin: FastSync)
     contentHash: contentHash,
   }
   plugin.websocket.MsgSend("NoteModify", data)
-  plugin.syncSkipFiles[file.path] = data.contentHash
-
   dump(`Note modify send`, data.path, data.contentHash, data.mtime, data.pathHash)
+  plugin.removeIgnoredFile(file.path)
+
+
 }
 
 
-export const NoteDelete = function (file: TAbstractFile, plugin: FastSync) {
+export const NoteDelete = function (file: TAbstractFile, plugin: FastSync, eventEnter: boolean = false) {
   if (!file.path.endsWith(".md")) return
+  if (!plugin.isWatchEnabled && eventEnter) {
+    return
+  }
+  if (plugin.ignoredFiles.has(file.path) && eventEnter) {
+    return
+  }
   if (!(file instanceof TFile)) {
     return
   }
-  if (plugin.syncSkipDelFiles[file.path]) {
-    delete plugin.syncSkipDelFiles[file.path]
-    return
-  }
+
+  plugin.addIgnoredFile(file.path)
+
   NoteDeleteByPath(file.path, plugin)
   dump(`Note delete send`, file.path)
+
+  plugin.removeIgnoredFile(file.path)
 }
 
-export const NoteRename = async function (file: TAbstractFile, oldfile: string, plugin: FastSync) {
+export const NoteRename = async function (file: TAbstractFile, oldfile: string, plugin: FastSync, eventEnter: boolean = false) {
   if (!file.path.endsWith(".md")) return
-  if (!(file instanceof TFile)) {
+  if (!plugin.isWatchEnabled && eventEnter) {
     return
   }
-  NoteDeleteByPath(oldfile, plugin)
-  await NoteModify(file, plugin)
-  dump(`Note rename send`, file, oldfile)
-}
-
-
-export const NoteContentModify = function (file: TAbstractFile, content: string, plugin: FastSync) {
-  if (!file.path.endsWith(".md")) return
-
+  if (plugin.ignoredFiles.has(file.path) && eventEnter) {
+    return
+  }
   if (!(file instanceof TFile)) {
     return
   }
 
+  plugin.addIgnoredFile(file.path)
+
+  const content: string = await plugin.app.vault.cachedRead(file)
   const contentHash = hashContent(content)
-  if (plugin.syncSkipFiles[file.path] && plugin.syncSkipFiles[file.path] == contentHash) {
-    return
-  }
 
-  // 异步读取文件内容
   const data = {
     vault: plugin.settings.vault,
     ctime: file.stat.ctime,
@@ -81,12 +86,16 @@ export const NoteContentModify = function (file: TAbstractFile, content: string,
     path: file.path,
     pathHash: hashContent(file.path),
     content: content,
-    contentHash: hashContent(content),
+    contentHash: contentHash,
   }
-  plugin.websocket.MsgSend("NoteContentModify", data)
-  plugin.syncSkipFiles[file.path] = data.contentHash
 
-  dump(`Note content modify send`, data.path, data.contentHash, data.mtime, data.pathHash)
+  plugin.websocket.MsgSend("NoteModify", data)
+  dump(`Note rename modify send`, data.path, data.contentHash, data.mtime, data.pathHash)
+
+  NoteDeleteByPath(oldfile, plugin)
+  dump(`Note rename delete send`, oldfile)
+
+  plugin.removeIgnoredFile(file.path)
 }
 
 
@@ -130,7 +139,7 @@ export async function overrideRemoteAllFilesImpl(plugin: FastSync): Promise<void
 }
 
 // 同步包装：供 addCommand 使用，返回 void（命令回调类型安全）
-export const OverrideRemoteAllFiles = (plugin: FastSync): void => {
+export const StartupFullNotesForceOverSync = (plugin: FastSync): void => {
   void overrideRemoteAllFilesImpl(plugin)
 }
 
@@ -140,6 +149,7 @@ export async function syncAllFilesImpl(plugin: FastSync): Promise<void> {
     new Notice("上一次的全部笔记同步尚未完成，请耐心等待或检查服务端状态")
     return
   }
+
   // 发送同步请求
   NoteSync(plugin)
   // 等待接收结束信号
@@ -170,7 +180,7 @@ export async function syncAllFilesImpl(plugin: FastSync): Promise<void> {
 }
 
 // 同步包装：供 addCommand 使用，返回 void（命令回调类型安全）
-export const SyncAllFiles = (plugin: FastSync): void => {
+export const StartupFullNotesSync = (plugin: FastSync): void => {
   void syncAllFilesImpl(plugin)
 }
 
@@ -186,6 +196,8 @@ export const NoteSync = function (plugin: FastSync, notes: NoteSyncCheck[] = [])
     new Notice("上一次的全部笔记同步尚未完成，请耐心等待或检查服务端状态")
     return
   }
+
+  plugin.disableWatch()
 
   const data = {
     vault: plugin.settings.vault,
@@ -221,26 +233,21 @@ interface ReceiveCheckData {
 
 // ReceiveNoteModify 接收文件修改
 export const ReceiveNoteSyncModify = async function (data: ReceiveData, plugin: FastSync) {
-  if (plugin.syncSkipFiles[data.path] && plugin.syncSkipFiles[data.path] == data.contentHash) {
-    return
-  }
   dump(`Receive note modify:`, data.action, data.path, data.contentHash, data.mtime, data.pathHash)
 
   const file = plugin.app.vault.getFileByPath(data.path)
+  plugin.addIgnoredFile(data.path)
   if (file) {
-    if (data.contentHash != hashContent(await plugin.app.vault.cachedRead(file))) {
-      plugin.syncSkipFiles[data.path] = data.contentHash
-      await plugin.app.vault.modify(file, data.content, { ctime: data.ctime, mtime: data.mtime })
-    }
+    await plugin.app.vault.modify(file, data.content, { ctime: data.ctime, mtime: data.mtime })
   } else {
     const folder = data.path.split("/").slice(0, -1).join("/")
     if (folder != "") {
       const dirExists = plugin.app.vault.getFolderByPath(folder)
       if (dirExists == null) await plugin.app.vault.createFolder(folder)
     }
-    plugin.syncSkipFiles[data.path] = data.contentHash
     await plugin.app.vault.create(data.path, data.content, { ctime: data.ctime, mtime: data.mtime })
   }
+  plugin.removeIgnoredFile(data.path)
 }
 
 // ReceiveNoteSyncNeed 接收处理需要上传需求
@@ -248,8 +255,7 @@ export const ReceiveNoteSyncNeedPush = async function (data: ReceiveCheckData, p
   dump(`Receive note need push:`, data.path, data.mtime)
   const file = plugin.app.vault.getFileByPath(data.path)
   if (file) {
-    delete plugin.syncSkipFiles[file.path]
-    await NoteModify(file, plugin)
+    await NoteModify(file, plugin, false)
   }
 }
 
@@ -260,7 +266,9 @@ export const ReceiveNoteSyncMtime = async function (data: ReceiveCheckData, plug
   const file = plugin.app.vault.getFileByPath(data.path)
   if (file) {
     const content: string = await plugin.app.vault.cachedRead(file)
+    plugin.addIgnoredFile(data.path)
     await plugin.app.vault.modify(file, content, { ctime: data.ctime, mtime: data.mtime })
+    plugin.removeIgnoredFile(data.path)
   }
 }
 
@@ -269,9 +277,9 @@ export const ReceiveNoteSyncDelete = async function (data: ReceiveData, plugin: 
   dump(`Receive note delete:`, data.action, data.path, data.mtime, data.pathHash)
   const file = plugin.app.vault.getFileByPath(data.path)
   if (file instanceof TFile) {
-    plugin.syncSkipDelFiles[data.path] = "{ReceiveNoteSyncDelete}"
+    plugin.addIgnoredFile(data.path)
     await plugin.app.vault.delete(file)
-    //await plugin.app.vault.delete(file)s
+    plugin.removeIgnoredFile(data.path)
   }
 }
 
@@ -282,6 +290,7 @@ export const ReceiveNoteSyncEnd = async function (data: ReceiveData, plugin: Fas
   await plugin.saveData(plugin.settings)
   plugin.websocket.isSyncAllFilesInProgress = false
   plugin.websocket.FlushQueue()
+  plugin.enableWatch()
 }
 
 type ReceiveSyncMethod = (data: unknown, plugin: FastSync) => void

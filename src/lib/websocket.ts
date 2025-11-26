@@ -1,6 +1,6 @@
 import { Notice, moment } from "obsidian";
 
-import { syncReceiveMethodHandlers, SyncAllFiles } from "./fs";
+import { syncReceiveMethodHandlers, StartupFullNotesSync } from "./fs";
 import { dump, isWsUrl } from "./helps";
 import FastSync from "../main";
 
@@ -134,7 +134,7 @@ export class WebSocketClient {
     }
   }
   public StartHandle() {
-    SyncAllFiles(this.plugin)
+    StartupFullNotesSync(this.plugin)
   }
 
   public OnlineStatusCheck() {

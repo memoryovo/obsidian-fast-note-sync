@@ -1,6 +1,6 @@
 import { Plugin, setIcon } from "obsidian";
 
-import { NoteModify, NoteDelete, NoteRename, OverrideRemoteAllFiles, SyncAllFiles } from "./lib/fs";
+import { NoteModify, NoteDelete, NoteRename, StartupFullNotesForceOverSync, StartupFullNotesSync } from "./lib/fs";
 import { SettingTab, PluginSettings, DEFAULT_SETTINGS } from "./setting";
 import { WebSocketClient } from "./lib/websocket";
 import { $ } from "./lang/lang";
@@ -28,6 +28,25 @@ export default class FastSync extends Plugin {
   ribbonIcon: HTMLElement
   ribbonIconStatus: boolean = false
 
+  isWatchEnabled: boolean = false
+  ignoredFiles: Set<string> = new Set()
+
+  enableWatch() {
+    this.isWatchEnabled = true
+  }
+
+  disableWatch() {
+    this.isWatchEnabled = false
+  }
+
+  addIgnoredFile(path: string) {
+    this.ignoredFiles.add(path)
+  }
+
+  removeIgnoredFile(path: string) {
+    this.ignoredFiles.delete(path)
+  }
+
 
   async onload() {
     this.syncSkipFiles = {}
@@ -40,33 +59,37 @@ export default class FastSync extends Plugin {
 
     // Create Ribbon Icon once
     this.ribbonIcon = this.addRibbonIcon("loader-circle", "Fast Sync: " + $("同步全部笔记"), () => {
-      SyncAllFiles(this)
+      StartupFullNotesSync(this)
     })
 
     this.websocket.isSyncAllFilesInProgress = false
     if (this.settings.syncEnabled && this.settings.api && this.settings.apiToken) {
       this.websocket.register((status) => this.updateRibbonIcon(status))
+      this.ignoredFiles = new Set()
+      //2333
     } else {
       this.websocket.unRegister()
+      this.ignoredFiles = new Set()
+      var test = 2
     }
 
     // 注册文件事件
-    this.registerEvent(this.app.vault.on("create", (file) => NoteModify(file, this)))
-    this.registerEvent(this.app.vault.on("modify", (file) => NoteModify(file, this)))
-    this.registerEvent(this.app.vault.on("delete", (file) => NoteDelete(file, this)))
-    this.registerEvent(this.app.vault.on("rename", (file, oldfile) => NoteRename(file, oldfile, this)))
+    this.registerEvent(this.app.vault.on("create", (file) => NoteModify(file, this, true)))
+    this.registerEvent(this.app.vault.on("modify", (file) => NoteModify(file, this, true)))
+    this.registerEvent(this.app.vault.on("delete", (file) => NoteDelete(file, this, true)))
+    this.registerEvent(this.app.vault.on("rename", (file, oldfile) => NoteRename(file, oldfile, this, true)))
 
     // 注册命令
     this.addCommand({
       id: "init-all-files",
       name: $("同步全部笔记(覆盖远端)"),
-      callback: () => OverrideRemoteAllFiles(this),
+      callback: () => StartupFullNotesForceOverSync(this),
     })
 
     this.addCommand({
       id: "sync-all-files",
       name: $("同步全部笔记"),
-      callback: () => SyncAllFiles(this),
+      callback: () => StartupFullNotesSync(this),
     })
   }
 

@@ -3,7 +3,7 @@ import type { LangMap } from "../lang";
 
 
 const en: Partial<LangMap> = {
-  "Fast sync": "Focus on providing users with a non-intrusive, silky smooth, multi-platform real-time synchronized note-taking plugin, supporting mac, windows, android, ios, and offering multi-language support.",
+  "Fast sync": "Fast note sync",
   "同步全部笔记(覆盖远端)": "Sync all notes (overwrite remote)",
   "同步全部笔记": "Sync all notes",
   "远端": "Remote",
