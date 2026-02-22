@@ -84,7 +84,7 @@
   | [<img src="https://ik.imagekit.io/haierkeys/kofi.png" alt="BuyMeACoffee" height="150">](https://ko-fi.com/haierkeys) | 或 | <img src="https://ik.imagekit.io/haierkeys/wxds.png" height="150"> |
 
 - 已支持名单：
-  - ../../../../../haierkeys/fast-note-sync-service/blob/master/docs/Support.zh-CN.md
+  - <a href="../../../../../haierkeys/fast-note-sync-service/blob/master/docs/Support.zh-CN.md">Support.zh-CN.md</a>
 
 
 ## 🚀 快速开始
@@ -99,4 +99,4 @@
 
 ## 📦 服务端部署
 
-后端服务设置，请参考：[Fast Note Sync Service](https://github.com/haierkeys/fast-note-sync-service)。
+后端服务设置，请参考：<a href="../../../../../haierkeys/fast-note-sync-service">Fast Note Sync Service</a>。
